@@ -9,6 +9,8 @@ import shlex
 import sys
 from .exceptions import InternalCommandException, ExitReplException  # noqa
 
+from gettext import gettext as _
+
 # Handle backwards compatibility between Click 7.0 and 8.0
 try: 
     import click.shell_completion
@@ -242,7 +244,7 @@ def repl(  # noqa: C901
             try:
                 result = handle_internal_commands(command)
                 if isinstance(result, str):
-                    click.echo(result)
+                    click.echo(click.style(result, dim=True))
                     continue
             except ExitReplException:
                 break
@@ -250,7 +252,7 @@ def repl(  # noqa: C901
         try:
             args = shlex.split(command)
         except ValueError as e:
-            click.echo("{}: {}".format(type(e).__name__, e))
+            click.echo(click.style("{}: {}".format(type(e).__name__, e), fg='red'))
             continue
 
         try:
@@ -258,7 +260,9 @@ def repl(  # noqa: C901
                 group.invoke(ctx)
                 ctx.exit()
         except click.ClickException as e:
-            e.show()
+            msg = _("Error: {message}").format(message=e.format_message())
+            click.echo(click.style(msg, fg='red', bold=True))
+
         except ClickExit:
             pass
         except SystemExit:
