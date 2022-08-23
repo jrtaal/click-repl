@@ -8,6 +8,7 @@ import os
 import shlex
 import sys
 from .exceptions import InternalCommandException, ExitReplException  # noqa
+import traceback
 
 from gettext import gettext as _
 
@@ -260,14 +261,18 @@ def repl(  # noqa: C901
                 group.invoke(ctx)
                 ctx.exit()
         except click.ClickException as e:
-            msg = _("Error: {message}").format(message=e.format_message())
+            msg = _("------\n\t{message}").format(message=e.format_message())
             click.echo(click.style(msg, fg='red', bold=True))
-
         except ClickExit:
             pass
         except SystemExit:
             pass
         except ExitReplException:
+            break
+        except Exception as e:
+            msg = _("Unknown Exception occurred:\n======\n\t{message}\n\n").format(message=str(e))
+            click.echo(click.style(msg, fg='red', bold=True))
+            click.echo(click.style(traceback.format_exc(), fg='red'))
             break
 
 
